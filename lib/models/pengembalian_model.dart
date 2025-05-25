@@ -1,5 +1,3 @@
-import 'peminjaman_model.dart';
-
 class Pengembalian {
   final int id;
   final int userId;
@@ -7,9 +5,8 @@ class Pengembalian {
   final int jumlah;
   final String tanggalDikembalikan;
   final String kondisiBarang;
-  final int denda;
-  final String catatan;
-  final Peminjaman? peminjaman;
+  final double denda;
+  final String status;
 
   Pengembalian({
     required this.id,
@@ -19,8 +16,7 @@ class Pengembalian {
     required this.tanggalDikembalikan,
     required this.kondisiBarang,
     required this.denda,
-    required this.catatan,
-    required this.peminjaman,
+    required this.status,
   });
 
   factory Pengembalian.fromJson(Map<String, dynamic> json) {
@@ -31,11 +27,8 @@ class Pengembalian {
       jumlah: json['jumlah'],
       tanggalDikembalikan: json['tanggal_dikembalikan'],
       kondisiBarang: json['kondisi_barang'],
-      denda: json['denda'],
-      catatan: json['catatan'],
-      peminjaman: json['peminjaman'] != null
-          ? Peminjaman.fromJson(json['peminjaman'])
-          : null,
+      denda: (json['denda'] as num).toDouble(),
+      status: json['status'],
     );
   }
 }

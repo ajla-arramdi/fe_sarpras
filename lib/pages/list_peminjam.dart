@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../service/peminjaman_service.dart';
 import '../service/auth_service.dart';
+import 'pengembalian_form_page.dart';
 
 class PeminjamanHistoryPage extends StatefulWidget {
   const PeminjamanHistoryPage({super.key});
@@ -22,7 +23,6 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
   }
 
   Future<void> _loadRiwayat() async {
-    final prefs = await SharedPreferences.getInstance();
     final token = await _authService.getToken();
 
     if (token == null) {
@@ -35,7 +35,6 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
 
     try {
       final data = await PeminjamanService.fetchPeminjamanUser(token);
-
       setState(() {
         _peminjamanList = data;
         _isLoading = false;
@@ -50,27 +49,62 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
 
   Widget _buildListItem(Map<String, dynamic> item) {
     final barang = item['barang'];
+    final status = (item['status'] ?? '').toString().toLowerCase();
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       elevation: 3,
-      child: ListTile(
-        title: Text(
-          barang != null ? barang['nama_barang'] ?? 'Barang' : 'Barang tidak ditemukan',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                barang != null ? barang['nama_barang'] ?? 'Barang' : 'Barang tidak ditemukan',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Jumlah: ${item['jumlah'] ?? '-'}'),
+                    Text('Tanggal Pinjam: ${item['tanggal_pinjam'] ?? '-'}'),
+                    Text('Tanggal Kembali: ${item['tanggal_pengembalian'] ?? '-'}'),
+                    Text('Status: ${item['status'] ?? '-'}'),
+                  ],
+                ),
+              ),
+              isThreeLine: true,
+            ),
+            // Jika status "disetujui", tampilkan tombol Kembalikan
+            if (status == 'disetujui')
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.assignment_return),
+                  label: const Text('Kembalikan'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PengembalianFormPage(peminjamanData: item),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
         ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Jumlah: ${item['jumlah'] ?? '-'}'),
-              Text('Tanggal Pinjam: ${item['tanggal_pinjam'] ?? '-'}'),
-              Text('Tanggal Kembali: ${item['tanggal_pengembalian'] ?? '-'}'),
-              Text('Status: ${item['status'] ?? '-'}'),
-            ],
-          ),
-        ),
-        isThreeLine: true,
       ),
     );
   }
