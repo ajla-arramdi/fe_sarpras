@@ -31,7 +31,7 @@ class _PengembalianFormPageState extends State<PengembalianFormPage> {
     final picked = await showDatePicker(
       context: context,
       initialDate: now,
-      firstDate: DateTime(now.year - 1),
+      firstDate: now,
       lastDate: DateTime(now.year + 1),
     );
 
@@ -42,22 +42,24 @@ class _PengembalianFormPageState extends State<PengembalianFormPage> {
 
   Future<bool> _showConfirmationDialog() async {
     return await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Konfirmasi Pengembalian'),
-        content: const Text('Apakah kamu yakin ingin mengembalikan barang ini?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Konfirmasi Pengembalian'),
+            content:
+                const Text('Apakah kamu yakin ingin mengembalikan barang ini?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Ya, Kembalikan'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Ya, Kembalikan'),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   Future<void> _submitPengembalian() async {
@@ -99,33 +101,28 @@ class _PengembalianFormPageState extends State<PengembalianFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final barang = widget.peminjamanData['barang'];
-
     return Scaffold(
+      backgroundColor: const Color(0xFFF3F4F6),
       appBar: AppBar(
         title: const Text('Form Pengembalian'),
+        backgroundColor: Colors.deepOrange,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
             children: [
-              Text(
-                'Barang: ${barang?['nama_barang'] ?? 'Tidak ditemukan'}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Text('Jumlah Pinjam: ${widget.peminjamanData['jumlah']}'),
-              const SizedBox(height: 16),
-
+              /// JUMLAH PENGEMBALIAN
               TextFormField(
                 controller: _jumlahController,
                 keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(
-                  labelText: 'Jumlah yang dikembalikan',
+                  labelText: 'Jumlah yang Dikembalikan',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.format_list_numbered),
                 ),
                 validator: (value) {
                   final jumlahPinjam = widget.peminjamanData['jumlah'];
@@ -144,23 +141,29 @@ class _PengembalianFormPageState extends State<PengembalianFormPage> {
               ),
 
               const SizedBox(height: 16),
+
+              /// TANGGAL PENGEMBALIAN
               TextFormField(
                 controller: _tanggalController,
                 readOnly: true,
+                onTap: _pickTanggalPengembalian,
                 decoration: const InputDecoration(
                   labelText: 'Tanggal Pengembalian',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.date_range),
                   suffixIcon: Icon(Icons.calendar_today),
                 ),
-                onTap: _pickTanggalPengembalian,
               ),
 
               const SizedBox(height: 16),
+
+              /// KONDISI BARANG
               DropdownButtonFormField<String>(
                 value: _kondisiBarang,
                 decoration: const InputDecoration(
                   labelText: 'Kondisi Barang',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.report_problem),
                 ),
                 items: const [
                   DropdownMenuItem(value: 'baik', child: Text('Baik')),
@@ -177,20 +180,50 @@ class _PengembalianFormPageState extends State<PengembalianFormPage> {
               ),
 
               if (_kondisiBarang != 'baik') ...[
-                const SizedBox(height: 12),
-                const Text(
-                  'Catatan: Denda akan ditentukan oleh admin untuk barang rusak atau hilang.',
-                  style: TextStyle(color: Colors.red),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    border: Border.all(color: Colors.red),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, color: Colors.red),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Catatan: Denda akan ditentukan oleh admin untuk barang rusak atau hilang.',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 30),
+
+              /// TOMBOL KEMBALIKAN
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  icon: const Icon(Icons.assignment_return),
-                  label: Text(_isSubmitting ? 'Memproses...' : 'Kembalikan Barang'),
+                  icon: const Icon(Icons.assignment_return_rounded),
+                  label: Text(_isSubmitting
+                      ? 'Memproses...'
+                      : 'Kembalikan Barang'),
                   onPressed: _isSubmitting ? null : _submitPengembalian,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
             ],

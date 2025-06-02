@@ -16,8 +16,6 @@ class PeminjamanPage extends StatefulWidget {
 
 class _PeminjamanPageState extends State<PeminjamanPage> {
   final _formKey = GlobalKey<FormState>();
-
-  final _namaController = TextEditingController();
   final _kelasController = TextEditingController();
   final _jumlahController = TextEditingController();
   final _keteranganController = TextEditingController();
@@ -28,12 +26,13 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
   int? _userId;
   final _authService = AuthService();
 
+  final Color _primaryColor = const Color(0xFFFF6B00);
+
   @override
   void initState() {
     super.initState();
     _loadUserId();
 
-    // Set barang default ke barang pertama yang dikirim (misal dari DetailBarangPage)
     if (widget.barangList.isNotEmpty) {
       _selectedBarang = widget.barangList[0];
     }
@@ -50,8 +49,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
     if (_formKey.currentState!.validate() &&
         _selectedBarang != null &&
         _userId != null) {
-
-      // Get the auth token
       final token = await _authService.getToken();
       if (token == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -62,7 +59,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
 
       final data = {
         'user_id': _userId,
-        'nama_peminjam': _namaController.text,
+        'nama_peminjam': '',
         'kelas_peminjam': _kelasController.text,
         'jumlah': int.tryParse(_jumlahController.text) ?? 1,
         'tanggal_pinjam': _tglPinjamController.text,
@@ -72,33 +69,31 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
         'status': 'menunggu',
       };
 
-     final success = await PeminjamanService.createPeminjaman(data, token);
+      final success = await PeminjamanService.createPeminjaman(data, token);
 
-if (success) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Peminjaman berhasil')),
-  );
-
-  // Navigasi ke halaman history dan refresh datanya
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (_) => const PeminjamanHistoryPage()),
-  );
-} else {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Gagal melakukan peminjaman')),
-  );
-}
-
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Peminjaman berhasil')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const PeminjamanHistoryPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal melakukan peminjaman')),
+        );
+      }
     }
   }
 
   Future<void> _pickDate(TextEditingController controller) async {
+    final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      firstDate: DateTime(2023),
+      initialDate: now,
+      firstDate: now, // Tidak bisa pilih tanggal sebelum hari ini
       lastDate: DateTime(2035),
-      initialDate: DateTime.now(),
     );
     if (picked != null) {
       controller.text = picked.toIso8601String().split('T')[0];
@@ -114,68 +109,130 @@ if (success) {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Form Peminjaman")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              // Nama peminjam bisa dikosongkan atau diisi manual
-              // TextFormField(
-              //   controller: _namaController,
-              //   decoration: const InputDecoration(labelText: 'Nama Peminjam'),
-              //   validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
-              // ),
-              TextFormField(
-                controller: _kelasController,
-                decoration: const InputDecoration(labelText: 'Kelas'),
-                validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
-              ),
-              TextFormField(
-                controller: _jumlahController,
-                decoration: const InputDecoration(labelText: 'Jumlah'),
-                keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
-              ),
-              TextFormField(
-                controller: _tglPinjamController,
-                readOnly: true,
-                onTap: () => _pickDate(_tglPinjamController),
-                decoration: const InputDecoration(labelText: 'Tanggal Pinjam'),
-                validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
-              ),
-              TextFormField(
-                controller: _tglKembaliController,
-                readOnly: true,
-                onTap: () => _pickDate(_tglKembaliController),
-                decoration:
-                    const InputDecoration(labelText: 'Tanggal Pengembalian'),
-                validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
-              ),
-              DropdownButtonFormField<Barang>(
-                value: _selectedBarang,
-                decoration: const InputDecoration(labelText: 'Pilih Barang'),
-                items: widget.barangList.map((barang) {
-                  return DropdownMenuItem(
-                    value: barang,
-                    child: Text(barang.namaBarang),
-                  );
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedBarang = val),
-                validator: (v) => v == null ? 'Pilih barang dulu' : null,
-              ),
-              TextFormField(
-                controller: _keteranganController,
-                decoration:
-                    const InputDecoration(labelText: 'Keterangan (opsional)'),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submit,
-                child: const Text('Simpan'),
-              ),
+      appBar: AppBar(
+        title: const Text("Form Peminjaman"),
+        backgroundColor: _primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 1,
+      ),
+      backgroundColor: Colors.grey[100],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 10,
+                color: Colors.black12,
+                offset: const Offset(0, 4),
+              )
             ],
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                _buildTextField(
+                  label: 'Kelas',
+                  controller: _kelasController,
+                  validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
+                ),
+                _buildTextField(
+                  label: 'Jumlah',
+                  controller: _jumlahController,
+                  keyboardType: TextInputType.number,
+                  validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
+                ),
+                _buildTextField(
+                  label: 'Tanggal Pinjam',
+                  controller: _tglPinjamController,
+                  readOnly: true,
+                  onTap: () => _pickDate(_tglPinjamController),
+                  validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
+                ),
+                _buildTextField(
+                  label: 'Tanggal Pengembalian',
+                  controller: _tglKembaliController,
+                  readOnly: true,
+                  onTap: () => _pickDate(_tglKembaliController),
+                  validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<Barang>(
+                  value: _selectedBarang,
+                  decoration: InputDecoration(
+                    labelText: 'Barang',
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  items: widget.barangList.map((barang) {
+                    return DropdownMenuItem(
+                      value: barang,
+                      child: Text(barang.namaBarang),
+                    );
+                  }).toList(),
+                  onChanged: (val) => setState(() => _selectedBarang = val),
+                  validator: (v) => v == null ? 'Pilih barang dulu' : null,
+                ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  label: 'Keterangan ',
+                  controller: _keteranganController,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.send),
+                    label: const Text("Pinjam Sekarang"),
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+    VoidCallback? onTap,
+    bool readOnly = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        readOnly: readOnly,
+        onTap: onTap,
+        validator: validator,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.grey[100],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
