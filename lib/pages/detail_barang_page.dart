@@ -12,9 +12,10 @@ class DetailBarangPage extends StatefulWidget {
 }
 
 class _DetailBarangPageState extends State<DetailBarangPage> {
-  final Color _primaryOrange = Color(0xFFFF6B00);
-  final Color _lightOrange = Color(0xFFFFF3E0);
-  final Color _darkOrange = Color(0xFFBF360C);
+  final Color _primaryColor = const Color(0xFF00897B); // Teal
+  final Color _secondaryColor = const Color(0xFF00BCD4); // Cyan
+  final Color _lightTeal = const Color(0xFFE0F2F1);
+  final Color _darkTeal = const Color(0xFF00695C);
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,7 @@ class _DetailBarangPageState extends State<DetailBarangPage> {
           'Detail Barang',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: _primaryOrange,
+        backgroundColor: _primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -41,7 +42,7 @@ class _DetailBarangPageState extends State<DetailBarangPage> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 gradient: LinearGradient(
-                  colors: [_lightOrange, Colors.white],
+                  colors: [_lightTeal, Colors.white],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -57,10 +58,10 @@ class _DetailBarangPageState extends State<DetailBarangPage> {
                         errorBuilder: (_, __, ___) => Icon(
                           Icons.broken_image,
                           size: 64,
-                          color: _primaryOrange,
+                          color: _primaryColor,
                         ),
                       )
-                    : Icon(Icons.inventory_2, size: 64, color: _primaryOrange),
+                    : Icon(Icons.inventory_2, size: 64, color: _primaryColor),
               ),
             ),
             const SizedBox(height: 20),
@@ -71,7 +72,7 @@ class _DetailBarangPageState extends State<DetailBarangPage> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: _darkOrange,
+                color: _darkTeal,
               ),
             ),
             const SizedBox(height: 12),
@@ -80,13 +81,13 @@ class _DetailBarangPageState extends State<DetailBarangPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: _primaryOrange.withOpacity(0.1),
+                color: _primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 barang.kategori.namaKategori,
                 style: TextStyle(
-                  color: _primaryOrange,
+                  color: _primaryColor,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -118,7 +119,7 @@ class _DetailBarangPageState extends State<DetailBarangPage> {
                   }
                 : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: _primaryOrange,
+              backgroundColor: _primaryColor,
               disabledBackgroundColor: Colors.grey,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -157,10 +158,10 @@ class _DetailBarangPageState extends State<DetailBarangPage> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _primaryOrange.withOpacity(0.1),
+              color: _primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: _primaryOrange, size: 24),
+            child: Icon(icon, color: _primaryColor, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -177,9 +178,10 @@ class _DetailBarangPageState extends State<DetailBarangPage> {
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
+                    color: _darkTeal,
                   ),
                 ),
               ],

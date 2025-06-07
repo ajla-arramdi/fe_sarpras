@@ -26,7 +26,10 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
   int? _userId;
   final _authService = AuthService();
 
-  final Color _primaryColor = const Color(0xFFFF6B00);
+  final Color _primaryColor = const Color(0xFF00897B); // Teal
+  final Color _secondaryColor = const Color(0xFF00BCD4); // Cyan
+  final Color _lightTeal = const Color(0xFFE0F2F1);
+  final Color _darkTeal = const Color(0xFF00695C);
 
   @override
   void initState() {
@@ -92,8 +95,21 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
     final picked = await showDatePicker(
       context: context,
       initialDate: now,
-      firstDate: now, // Tidak bisa pilih tanggal sebelum hari ini
+      firstDate: now,
       lastDate: DateTime(2035),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: _primaryColor,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: _darkTeal,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       controller.text = picked.toIso8601String().split('T')[0];
@@ -110,10 +126,13 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Form Peminjaman"),
+        title: const Text(
+          "Form Peminjaman",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: _primaryColor,
         foregroundColor: Colors.white,
-        elevation: 1,
+        elevation: 0,
       ),
       backgroundColor: Colors.grey[100],
       body: SingleChildScrollView(
@@ -125,8 +144,8 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 10,
-                color: Colors.black12,
                 offset: const Offset(0, 4),
               )
             ],
@@ -166,13 +185,27 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
                   decoration: InputDecoration(
                     labelText: 'Barang',
                     filled: true,
-                    fillColor: Colors.grey[100],
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    fillColor: _lightTeal,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: _primaryColor.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: _primaryColor.withOpacity(0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: _primaryColor, width: 2),
+                    ),
                   ),
                   items: widget.barangList.map((barang) {
                     return DropdownMenuItem(
                       value: barang,
-                      child: Text(barang.namaBarang),
+                      child: Text(
+                        barang.namaBarang,
+                        style: TextStyle(color: _darkTeal),
+                      ),
                     );
                   }).toList(),
                   onChanged: (val) => setState(() => _selectedBarang = val),
@@ -180,7 +213,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
                 ),
                 const SizedBox(height: 12),
                 _buildTextField(
-                  label: 'Keterangan ',
+                  label: 'Keterangan',
                   controller: _keteranganController,
                 ),
                 const SizedBox(height: 20),
@@ -192,6 +225,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
                     onPressed: _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _primaryColor,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -227,12 +261,23 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
         readOnly: readOnly,
         onTap: onTap,
         validator: validator,
+        style: TextStyle(color: _darkTeal),
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: TextStyle(color: _primaryColor),
           filled: true,
-          fillColor: Colors.grey[100],
+          fillColor: _lightTeal,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: _primaryColor.withOpacity(0.3)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: _primaryColor.withOpacity(0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: _primaryColor, width: 2),
           ),
         ),
       ),

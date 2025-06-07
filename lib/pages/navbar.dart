@@ -14,8 +14,9 @@ class _NavbarState extends State<Navbar> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
-  final Color _primaryOrange = Color(0xFFFF6B00);
-  final Color _lightOrange = Color(0xFFFFE0B2);
+  final Color _primaryColor = const Color(0xFF00897B); // Teal
+  final Color _secondaryColor = const Color(0xFF00BCD4); // Cyan
+  final Color _lightTeal = const Color(0xFFE0F2F1);
 
   late final List<Widget> _pages;
 
@@ -59,7 +60,7 @@ class _NavbarState extends State<Navbar> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              _primaryOrange.withOpacity(0.1),
+              _primaryColor.withOpacity(0.1),
               Colors.white,
             ],
           ),
@@ -77,6 +78,7 @@ class _NavbarState extends State<Navbar> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
+          color: Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -88,15 +90,17 @@ class _NavbarState extends State<Navbar> {
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
-          selectedItemColor: _primaryOrange,
+          selectedItemColor: _primaryColor,
           unselectedItemColor: Colors.grey,
           type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          elevation: 0,
           items: [
             BottomNavigationBarItem(
               icon: Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _selectedIndex == 0 ? _lightOrange : Colors.transparent,
+                  color: _selectedIndex == 0 ? _lightTeal : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.inventory_2_outlined, size: 24),
@@ -104,7 +108,7 @@ class _NavbarState extends State<Navbar> {
               activeIcon: Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _lightOrange,
+                  color: _lightTeal,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.inventory_2, size: 24),
@@ -115,7 +119,7 @@ class _NavbarState extends State<Navbar> {
               icon: Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _selectedIndex == 1 ? _lightOrange : Colors.transparent,
+                  color: _selectedIndex == 1 ? _lightTeal : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.history_outlined, size: 24),
@@ -123,7 +127,7 @@ class _NavbarState extends State<Navbar> {
               activeIcon: Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _lightOrange,
+                  color: _lightTeal,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.history, size: 24),
@@ -134,7 +138,7 @@ class _NavbarState extends State<Navbar> {
               icon: Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _selectedIndex == 2 ? _lightOrange : Colors.transparent,
+                  color: _selectedIndex == 2 ? _lightTeal : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.person_outline, size: 24),
@@ -142,7 +146,7 @@ class _NavbarState extends State<Navbar> {
               activeIcon: Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _lightOrange,
+                  color: _lightTeal,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.person, size: 24),

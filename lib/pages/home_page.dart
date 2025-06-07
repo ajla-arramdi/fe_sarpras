@@ -8,26 +8,46 @@ class ListBarangPage extends StatefulWidget {
   _ListBarangPageState createState() => _ListBarangPageState();
 }
 
-class _ListBarangPageState extends State<ListBarangPage> {
+class _ListBarangPageState extends State<ListBarangPage> with SingleTickerProviderStateMixin {
   late Future<List<Barang>> _futureBarang;
   final BarangService _barangService = BarangService();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   List<Barang> _filteredBarang = [];
+  String? _selectedCategory;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
-  final Color _primaryOrange = Color(0xFFFF6B00);
-  final Color _lightOrange = Color(0xFFFFF3E0);
-  final Color _darkOrange = Color(0xFFBF360C);
+  // Warna tema modern
+  final Color _primaryColor = const Color(0xFF2196F3); // Blue
+  final Color _secondaryColor = const Color(0xFF1976D2); // Darker Blue
+  final Color _backgroundColor = Colors.white; // White Background
+  final Color _textPrimary = const Color(0xFF1A237E); // Darkest Blue
+  final Color _textSecondary = const Color(0xFF1565C0); // Dark Blue
+  final Color _lightBlue = const Color(0xFFE3F2FD); // Light Blue
+  final Color _glassBlue = const Color(0x802196F3); // Glassy Blue with 50% opacity
+  final Color _cardColor = Colors.white;
+  final Color _accentColor = const Color(0xFF00BCD4); // Cyan accent
+  final Color _headerColor = const Color(0xFF1976D2); // Darker Blue for header
 
   @override
   void initState() {
     super.initState();
     _loadBarang();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+    _animationController.forward();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -43,7 +63,7 @@ class _ListBarangPageState extends State<ListBarangPage> {
   void _filterBarang(String query) {
     setState(() {
       _searchQuery = query;
-      if (query.isEmpty) {
+      if (query.isEmpty && _selectedCategory == null) {
         _futureBarang.then((barangList) {
           setState(() {
             _filteredBarang = barangList;
@@ -54,9 +74,11 @@ class _ListBarangPageState extends State<ListBarangPage> {
           setState(() {
             final lowerQuery = query.toLowerCase();
             _filteredBarang = barangList.where((barang) {
-              return barang.namaBarang.toLowerCase().contains(lowerQuery) ||
-                  (barang.code?.toLowerCase().contains(lowerQuery) ?? false) ||
-                  barang.kategori.namaKategori.toLowerCase().contains(lowerQuery);
+              final matchesSearch = barang.namaBarang.toLowerCase().contains(lowerQuery) ||
+                  (barang.code?.toLowerCase().contains(lowerQuery) ?? false);
+              final matchesCategory = _selectedCategory == null || 
+                  barang.kategori.namaKategori == _selectedCategory;
+              return matchesSearch && matchesCategory;
             }).toList();
           });
         });
@@ -64,72 +86,197 @@ class _ListBarangPageState extends State<ListBarangPage> {
     });
   }
 
+  void _filterByCategory(String? category) {
+    setState(() {
+      _selectedCategory = category;
+      _filterBarang(_searchQuery);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final screenWidth = screenSize.width;
+    final screenHeight = screenSize.height;
+    final isTablet = screenWidth > 600;
+    final isSmallScreen = screenHeight < 600;
+    final padding = isTablet ? 24.0 : 16.0;
+
     return Scaffold(
+      backgroundColor: _backgroundColor,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
-            _buildAppBar(),
-            _buildSearchBar(),
-            _buildBarangGrid(),
+            _buildHeader(padding, isTablet, isSmallScreen),
+            _buildSearchBar(padding),
+            _buildCategoryFilter(padding),
+            _buildBarangGrid(padding, isTablet, isSmallScreen, screenWidth),
           ],
         ),
       ),
     );
   }
 
-  SliverAppBar _buildAppBar() {
-    return SliverAppBar(
-      expandedHeight: 120.0,
-      pinned: true,
-      backgroundColor: _primaryOrange,
-      flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          "List Barang",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [_primaryOrange, Color(0xFFFF8F00)],
-            ),
+  SliverToBoxAdapter _buildHeader(double padding, bool isTablet, bool isSmallScreen) {
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: EdgeInsets.fromLTRB(padding, isSmallScreen ? 16 : 24, padding, isSmallScreen ? 16 : 20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_headerColor, _primaryColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(30),
+            bottomRight: Radius.circular(30),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _headerColor.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(isTablet ? 12 : 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.inventory_2,
+                    color: Colors.white,
+                    size: isTablet ? 32 : 24,
+                  ),
+                ),
+                SizedBox(width: isTablet ? 16 : 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Sarpras",
+                        style: TextStyle(
+                          fontSize: isTablet ? 28 : 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      Text(
+                        "SMK Taruna Bhakti",
+                        style: TextStyle(
+                          fontSize: isTablet ? 18 : 14,
+                          color: Colors.white.withOpacity(0.9),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (!isSmallScreen) ...[
+              SizedBox(height: isTablet ? 20 : 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.info_outline, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Selamat Datang",
+                            style: TextStyle(
+                              fontSize: isTablet ? 16 : 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Sistem Inventaris Sarana dan Prasarana",
+                            style: TextStyle(
+                              fontSize: isTablet ? 14 : 12,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
 
-  SliverToBoxAdapter _buildSearchBar() {
+  SliverToBoxAdapter _buildSearchBar(double padding) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(padding, 20, padding, 16),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            color: _cardColor,
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
+                color: _glassBlue.withOpacity(0.1),
                 blurRadius: 10,
+                spreadRadius: 0,
               ),
             ],
           ),
           child: TextField(
             controller: _searchController,
+            style: TextStyle(color: _textPrimary),
             decoration: InputDecoration(
               hintText: 'Cari barang...',
-              prefixIcon: Icon(Icons.search, color: _primaryOrange),
+              hintStyle: TextStyle(color: _textSecondary.withOpacity(0.7)),
+              prefixIcon: Container(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Icons.search, color: _primaryColor),
+              ),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
-                      icon: Icon(Icons.clear, color: _primaryOrange),
+                      icon: Icon(Icons.clear, color: _primaryColor),
                       onPressed: () {
                         _searchController.clear();
                         _filterBarang('');
@@ -144,41 +291,173 @@ class _ListBarangPageState extends State<ListBarangPage> {
     );
   }
 
-  Widget _buildBarangGrid() {
+  SliverToBoxAdapter _buildCategoryFilter(double padding) {
+    return SliverToBoxAdapter(
+      child: FutureBuilder<List<Barang>>(
+        future: _futureBarang,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const SizedBox();
+          }
+
+          final categories = snapshot.data!
+              .map((barang) => barang.kategori.namaKategori)
+              .toSet()
+              .toList();
+
+          return Container(
+            height: 45,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              itemCount: categories.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: const Text('Semua'),
+                      selected: _selectedCategory == null,
+                      onSelected: (_) => _filterByCategory(null),
+                      backgroundColor: _cardColor,
+                      selectedColor: _primaryColor,
+                      labelStyle: TextStyle(
+                        color: _selectedCategory == null ? Colors.white : _primaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: _selectedCategory == null ? Colors.transparent : _primaryColor,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                final category = categories[index - 1];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(category),
+                    selected: _selectedCategory == category,
+                    onSelected: (_) => _filterByCategory(category),
+                    backgroundColor: _cardColor,
+                    selectedColor: _primaryColor,
+                    labelStyle: TextStyle(
+                      color: _selectedCategory == category ? Colors.white : _primaryColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: _selectedCategory == category ? Colors.transparent : _primaryColor,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBarangGrid(double padding, bool isTablet, bool isSmallScreen, double screenWidth) {
     return FutureBuilder<List<Barang>>(
       future: _futureBarang,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator(color: _primaryOrange)),
+          return SliverToBoxAdapter(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: _primaryColor,
+                  strokeWidth: 3,
+                ),
+              ),
+            ),
           );
         }
 
         if (snapshot.hasError) {
-          return SliverFillRemaining(
-            child: Center(child: Text("Terjadi kesalahan: ${snapshot.error}")),
+          return SliverToBoxAdapter(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: _primaryColor),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Terjadi kesalahan: ${snapshot.error}",
+                      style: TextStyle(color: _textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           );
         }
 
         if (!snapshot.hasData || _filteredBarang.isEmpty) {
-          return SliverFillRemaining(
-            child: _buildEmptyState(),
+          return SliverToBoxAdapter(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: _buildEmptyState(),
+            ),
           );
         }
 
+        // Calculate grid layout based on screen width
+        int crossAxisCount;
+        double childAspectRatio;
+        double spacing;
+
+        if (screenWidth > 900) {
+          crossAxisCount = 4;
+          childAspectRatio = 0.85;
+          spacing = 20;
+        } else if (screenWidth > 600) {
+          crossAxisCount = 3;
+          childAspectRatio = 0.8;
+          spacing = 16;
+        } else if (screenWidth > 400) {
+          crossAxisCount = 2;
+          childAspectRatio = isSmallScreen ? 0.7 : 0.75;
+          spacing = 12;
+        } else {
+          crossAxisCount = 1;
+          childAspectRatio = 1.2;
+          spacing = 12;
+        }
+
         return SliverPadding(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.symmetric(horizontal: padding),
           sliver: SliverGrid(
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 250,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.7,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisSpacing: spacing,
+              crossAxisSpacing: spacing,
+              childAspectRatio: childAspectRatio,
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final barang = _filteredBarang[index];
-                return _buildBarangCard(barang);
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: _buildBarangCard(barang, isTablet, isSmallScreen),
+                );
               },
               childCount: _filteredBarang.length,
             ),
@@ -193,55 +472,68 @@ class _ListBarangPageState extends State<ListBarangPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _lightBlue.withOpacity(0.5),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.search_off,
+              size: 48,
+              color: _primaryColor,
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(
             _searchQuery.isEmpty
                 ? "Tidak ada barang ditemukan"
                 : "Tidak ada hasil untuk '$_searchQuery'",
-            style: TextStyle(color: Colors.grey[600]),
+            style: TextStyle(
+              color: _textSecondary,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBarangCard(Barang barang) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DetailBarangPage(barang: barang),
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Container(
+  Widget _buildBarangCard(Barang barang, bool isTablet, bool isSmallScreen) {
+    return Hero(
+      tag: 'barang-${barang.id}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DetailBarangPage(barang: barang),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _cardColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 12,
-                  offset: Offset(0, 4),
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  spreadRadius: 0,
                 ),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildBarangImage(barang, constraints.maxHeight * 0.45),
+                _buildBarangImage(barang, isTablet, isSmallScreen),
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
-                    ),
+                  child: Padding(
+                    padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -249,50 +541,57 @@ class _ListBarangPageState extends State<ListBarangPage> {
                           barang.namaBarang,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: _darkOrange,
+                            fontSize: isSmallScreen ? 13 : 14,
+                            color: _textPrimary,
                             height: 1.2,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: 6),
+                        SizedBox(height: isSmallScreen ? 6 : 8),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isSmallScreen ? 6 : 8,
+                            vertical: isSmallScreen ? 3 : 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: _primaryOrange.withOpacity(0.1),
+                            gradient: LinearGradient(
+                              colors: [_primaryColor.withOpacity(0.1), _accentColor.withOpacity(0.1)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             barang.kategori.namaKategori,
                             style: TextStyle(
-                              fontSize: 12,
-                              color: _primaryOrange,
+                              fontSize: isSmallScreen ? 11 : 12,
+                              color: _primaryColor,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                        Spacer(),
+                        const Spacer(),
                         Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(6),
+                              padding: EdgeInsets.all(isSmallScreen ? 4 : 6),
                               decoration: BoxDecoration(
-                                color: Colors.grey[100],
+                                color: _lightBlue,
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Icon(
                                 Icons.inventory_2_outlined,
-                                size: 16,
-                                color: Colors.grey[700],
+                                size: isSmallScreen ? 14 : 16,
+                                color: _primaryColor,
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: isSmallScreen ? 6 : 8),
                             Text(
                               "${barang.jumlah} pcs",
                               style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[700],
+                                fontSize: isSmallScreen ? 12 : 13,
+                                color: _textSecondary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -304,26 +603,26 @@ class _ListBarangPageState extends State<ListBarangPage> {
                 ),
               ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildBarangImage(Barang barang, double height) {
+  Widget _buildBarangImage(Barang barang, bool isTablet, bool isSmallScreen) {
     return Container(
-      height: height,
+      height: isSmallScreen ? 120 : (isTablet ? 180 : 140),
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         gradient: LinearGradient(
-          colors: [_lightOrange, Colors.white],
+          colors: [_lightBlue, _cardColor],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         child: barang.foto != null && barang.foto!.isNotEmpty
             ? Image.network(
                 barang.foto!,
@@ -331,11 +630,19 @@ class _ListBarangPageState extends State<ListBarangPage> {
                 width: double.infinity,
                 height: double.infinity,
                 errorBuilder: (_, __, ___) => Center(
-                  child: Icon(Icons.inventory_2, size: 48, color: _primaryOrange),
+                  child: Icon(
+                    Icons.inventory_2,
+                    size: isSmallScreen ? 40 : (isTablet ? 64 : 48),
+                    color: _primaryColor,
+                  ),
                 ),
               )
             : Center(
-                child: Icon(Icons.inventory_2, size: 48, color: _primaryOrange),
+                child: Icon(
+                  Icons.inventory_2,
+                  size: isSmallScreen ? 40 : (isTablet ? 64 : 48),
+                  color: _primaryColor,
+                ),
               ),
       ),
     );

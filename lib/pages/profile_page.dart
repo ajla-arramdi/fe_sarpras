@@ -16,6 +16,11 @@ class _ProfilePageState extends State<ProfilePage> {
   };
   bool _isLoading = true;
 
+  final Color _primaryColor = const Color(0xFF00897B); // Teal
+  final Color _secondaryColor = const Color(0xFF00BCD4); // Cyan
+  final Color _lightTeal = const Color(0xFFE0F2F1);
+  final Color _darkTeal = const Color(0xFF00695C);
+
   @override
   void initState() {
     super.initState();
@@ -69,16 +74,16 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: _primaryColor))
           : CustomScrollView(
               slivers: [
                 SliverAppBar(
                   expandedHeight: 200.0,
                   floating: false,
                   pinned: true,
-                  backgroundColor: const Color(0xFFFF6B00),
+                  backgroundColor: _primaryColor,
                   flexibleSpace: FlexibleSpaceBar(
-                    title: Text(
+                    title: const Text(
                       'Profile',
                       style: TextStyle(
                         color: Colors.white,
@@ -91,8 +96,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Color(0xFFFF6B00),
-                            Color(0xFFFF8F00),
+                            _primaryColor,
+                            _secondaryColor,
                           ],
                         ),
                       ),
@@ -116,7 +121,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
+                            color: Colors.black.withOpacity(0.05),
                             spreadRadius: 1,
                             blurRadius: 10,
                             offset: const Offset(0, 3),
@@ -130,14 +135,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Color(0xFFFF6B00),
+                                color: _primaryColor,
                                 width: 2,
                               ),
                             ),
-                            child: const CircleAvatar(
+                            child: CircleAvatar(
                               radius: 50,
-                              backgroundColor: Color(0xFFFF6B00),
-                              child: Icon(
+                              backgroundColor: _primaryColor,
+                              child: const Icon(
                                 Icons.person,
                                 size: 50,
                                 color: Colors.white,
@@ -163,7 +168,7 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: _lightTeal),
       ),
       child: Column(
         children: [
@@ -189,10 +194,10 @@ class _ProfilePageState extends State<ProfilePage> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(0xFFFF6B00).withOpacity(0.1),
+            color: _lightTeal,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: Color(0xFFFF6B00)),
+          child: Icon(icon, color: _primaryColor),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -203,16 +208,16 @@ class _ProfilePageState extends State<ProfilePage> {
                 label,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: _darkTeal.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF424242),
+                  color: _darkTeal,
                 ),
               ),
             ],

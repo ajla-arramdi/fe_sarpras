@@ -15,6 +15,11 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
   List<dynamic> _peminjamanList = [];
   bool _isLoading = true;
 
+  final Color _primaryColor = const Color(0xFF00897B); // Teal
+  final Color _secondaryColor = const Color(0xFF00BCD4); // Cyan
+  final Color _lightTeal = const Color(0xFFE0F2F1);
+  final Color _darkTeal = const Color(0xFF00695C);
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +57,7 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
       case 'ditolak':
         return Colors.red;
       default:
-        return Colors.orange;
+        return _primaryColor;
     }
   }
 
@@ -66,11 +71,11 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           )
         ],
       ),
@@ -82,14 +87,22 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
             /// HEADER BARANG
             Row(
               children: [
-                const Icon(Icons.inventory_2_outlined, size: 32, color: Colors.deepOrange),
-                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.inventory_2_outlined, size: 24, color: _primaryColor),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     namaBarang,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
+                      color: _darkTeal,
                     ),
                   ),
                 ),
@@ -133,7 +146,7 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
                   icon: const Icon(Icons.assignment_return),
                   label: const Text("Kembalikan"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
+                    backgroundColor: _primaryColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -164,9 +177,17 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
         children: [
           Text(
             "$title: ",
-            style: const TextStyle(fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: _darkTeal,
+            ),
           ),
-          Text(value ?? '-', style: const TextStyle(color: Colors.black87)),
+          Text(
+            value ?? '-',
+            style: TextStyle(
+              color: Colors.grey[700],
+            ),
+          ),
         ],
       ),
     );
@@ -178,12 +199,16 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
         padding: const EdgeInsets.symmetric(horizontal: 30.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.history, size: 80, color: Colors.grey),
-            SizedBox(height: 16),
+          children: [
+            Icon(Icons.history, size: 80, color: _primaryColor.withOpacity(0.5)),
+            const SizedBox(height: 16),
             Text(
               'Belum ada riwayat peminjaman',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 18,
+                color: _darkTeal,
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -195,15 +220,18 @@ class _PeminjamanHistoryPageState extends State<PeminjamanHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6),
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Riwayat Peminjaman"),
-        backgroundColor: Colors.deepOrange,
+        title: const Text(
+          "Riwayat Peminjaman",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: _primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: _primaryColor))
           : _peminjamanList.isEmpty
               ? _buildEmptyState()
               : ListView.builder(
